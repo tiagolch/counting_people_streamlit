@@ -85,7 +85,7 @@ nome_responsavel = nome_pessoa if nome_pessoa.strip() != "" else "Não informado
 
 # Mensagem do WhatsApp com o horário fixo selecionado
 texto_whatsapp = (
-    f"📊 *RELATÓRIO DE PÚBLICO DO CULTO*\n"
+    f"📊 *RELATÓRIO DE PÚBLICO DA REUNIÃO*\n"
     f"🕒 *Horário:* {horario_selecionado}\n"
     f"👤 *Responsável:* {nome_responsavel}\n\n"
     f"🚶‍♂️ *Total Geral:* {total_geral} pessoas\n"
