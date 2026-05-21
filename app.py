@@ -1,7 +1,4 @@
-import cv2
 import streamlit as st
-import numpy as np
-from PIL import Image
 import urllib.parse
 
 st.set_page_config(
@@ -28,10 +25,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("⛪ Contador por reunião")
+st.title("⛪ Contador por reunião - Hillsong em Aveiro")
 st.write("Introduza os dados recolhidos para consolidar o relatório.")
 
-# Inicialização do estado dos dados
 if "dados" not in st.session_state:
     st.session_state.dados = {
         "dir_adultos": 0, "dir_criancas": 0, "dir_visitantes": 0, "dir_conversoes": 0
@@ -39,14 +35,12 @@ if "dados" not in st.session_state:
 
 st.markdown("### 📝 Identificação e Horário")
 
-# Campo de texto para o nome
-nome_pessoa = st.text_input("Nome do responsável pela contagem:", placeholder="Ex: João Silva")
+nome_pessoa = st.text_input("Nome do responsável pela contagem:", placeholder="Ex: João Silva D1 ou E1")
 
-# Seleção rápida com os horários fixos da igreja
 horario_selecionado = st.radio(
     "Selecione o horário do culto / reunião:",
     options=["09:30", "11:30", "17:30"],
-    horizontal=True  # Deixa os botões lado a lado para poupar espaço no ecrã
+    horizontal=True 
 )
 
 st.markdown("---")
@@ -63,7 +57,6 @@ val_conv = st.number_input("Conversões / Decisões", min_value=0,
 
 st.markdown("---")
 
-# Atualização dos dados estruturados
 st.session_state.dados.update({
     "dir_adultos": val_dir_a, 
     "dir_criancas": val_dir_c,
@@ -83,7 +76,6 @@ st.markdown("### 💬 Enviar para o WhatsApp")
 
 nome_responsavel = nome_pessoa if nome_pessoa.strip() != "" else "Não informado"
 
-# Mensagem do WhatsApp com o horário fixo selecionado
 texto_whatsapp = (
     f"📊 *RELATÓRIO DE PÚBLICO DA REUNIÃO*\n"
     f"🕒 *Horário:* {horario_selecionado}\n"
