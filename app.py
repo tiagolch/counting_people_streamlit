@@ -6,7 +6,7 @@ import urllib.parse
 
 st.set_page_config(
     page_title="Contador Igreja",
-    page_icon="⛪",
+    page_icon="👑",
     layout="centered"
 )
 
@@ -26,18 +26,31 @@ st.markdown("""
         margin-bottom: 10px;
     }
     </style>
-""", unsafe_allow_html=True)  # <-- CORRIGIDO AQUI
+""", unsafe_allow_html=True)
 
 st.title("⛪ Contador por reunião")
 st.write("Introduza os dados recolhidos para consolidar o relatório.")
 
+# Inicialização do estado dos dados
 if "dados" not in st.session_state:
     st.session_state.dados = {
-        "dir_adultos": 0, "dir_criancas": 0, "dir_visitantes": 0, "dir_conversoes": 0,
-        "esq_adultos": 0, "esq_criancas": 0
+        "dir_adultos": 0, "dir_criancas": 0, "dir_visitantes": 0, "dir_conversoes": 0
     }
 
-st.markdown("### 📝 Dados da Contagem")
+st.markdown("### 📝 Identificação e Horário")
+
+# Campo de texto para o nome
+nome_pessoa = st.text_input("Nome do responsável pela contagem:", placeholder="Ex: João Silva")
+
+# Seleção rápida com os horários fixos da igreja
+horario_selecionado = st.radio(
+    "Selecione o horário do culto / reunião:",
+    options=["09:30", "11:30", "17:30"],
+    horizontal=True  # Deixa os botões lado a lado para poupar espaço no ecrã
+)
+
+st.markdown("---")
+st.markdown("### 🔢 Dados da Contagem")
 
 val_dir_a = st.number_input("Adultos", min_value=0,
                             step=1, value=st.session_state.dados["dir_adultos"])
@@ -50,35 +63,41 @@ val_conv = st.number_input("Conversões / Decisões", min_value=0,
 
 st.markdown("---")
 
+# Atualização dos dados estruturados
 st.session_state.dados.update({
-    "dir_adultos": val_dir_a, "dir_criancas": val_dir_c,
-    "dir_visitantes": val_vis, "dir_conversoes": val_conv,
+    "dir_adultos": val_dir_a, 
+    "dir_criancas": val_dir_c,
+    "dir_visitantes": val_vis, 
+    "dir_conversoes": val_conv,
 })
 
-total_adultos = st.session_state.dados["dir_adultos"] + \
-    st.session_state.dados["esq_adultos"]
-total_criancas = st.session_state.dados["dir_criancas"] + \
-    st.session_state.dados["esq_criancas"]
+total_adultos = st.session_state.dados["dir_adultos"]
+total_criancas = st.session_state.dados["dir_criancas"]
 total_geral = total_adultos + total_criancas
 
-st.markdown("---")
 st.markdown("### 📊 Totais Calculados")
 st.metric("PÚBLICO TOTAL", total_geral)
 
+st.markdown("---")
 st.markdown("### 💬 Enviar para o WhatsApp")
 
+nome_responsavel = nome_pessoa if nome_pessoa.strip() != "" else "Não informado"
+
+# Mensagem do WhatsApp com o horário fixo selecionado
 texto_whatsapp = (
-    f"📊 *RELATÓRIO DE PÚBLICO DO CULTO*\n\n"
+    f"📊 *RELATÓRIO DE PÚBLICO DO CULTO*\n"
+    f"🕒 *Horário:* {horario_selecionado}\n"
+    f"👤 *Responsável:* {nome_responsavel}\n\n"
     f"🚶‍♂️ *Total Geral:* {total_geral} pessoas\n"
     f"👨‍💼 *Adultos:* {total_adultos}\n"
     f"👶 *Crianças:* {total_criancas}\n\n"
     f"⭐ *Visitantes:* {st.session_state.dados['dir_visitantes']}\n"
     f"❤️ *Conversões:* {st.session_state.dados['dir_conversoes']}\n\n"
-    f"_Enviado via Sistema de Contagem Inteligente_"
+    f"_Enviado via Contador de Reuniões Igreja_"
 )
 
 st.text_area("Toque e segure para copiar o texto abaixo:",
-             value=texto_whatsapp, height=180)
+             value=texto_whatsapp, height=220)
 
 texto_url = urllib.parse.quote(texto_whatsapp)
 link_whatsapp = f"https://wa.me/?text={texto_url}"
