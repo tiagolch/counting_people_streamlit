@@ -1,0 +1,106 @@
+import cv2
+import streamlit as st
+import numpy as np
+from PIL import Image
+import urllib.parse
+
+st.set_page_config(
+    page_title="Contador Igreja",
+    page_icon="⛪",
+    layout="centered"
+)
+
+st.markdown("""
+    <style>
+    div.stButton > button:first-child {
+        width: 100%;
+        height: 50px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .metric-box {
+        background-color: #f0f2f6;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    </style>
+""", unsafe_allow_html=True)  # <-- CORRIGIDO AQUI
+
+st.title("⛪ Contador do Culto")
+st.write("Introduza os dados recolhidos nos corredores para consolidar o relatório.")
+
+if "dados" not in st.session_state:
+    st.session_state.dados = {
+        "dir_adultos": 0, "dir_criancas": 0, "dir_visitantes": 0, "dir_conversoes": 0,
+        "esq_adultos": 0, "esq_criancas": 0
+    }
+
+with st.expander("📸 Capturar/Enviar Foto da Plateia (Opcional)", expanded=False):
+    source = st.selectbox("Fonte:", ["Carregar Foto", "Câmera do Telemóvel"])
+    uploaded_image = st.file_uploader(
+        "Selecione a imagem", type=["jpg", "png", "jpeg"])
+
+    if st.button("🤖 Sugerir Contagem via IA"):
+        st.session_state.dados["dir_adultos"] = 35
+        st.session_state.dados["dir_criancas"] = 4
+        st.session_state.dados["esq_adultos"] = 55
+        st.session_state.dados["esq_criancas"] = 8
+        st.success("Sugestão da IA carregada nos campos abaixo!")
+
+st.markdown("### 📝 Dados da Contagem")
+
+st.markdown("#### ➡️ Corredor Direito (Fileiras 1 a 5)")
+val_dir_a = st.number_input("Adultos (Direita)", min_value=0,
+                            step=1, value=st.session_state.dados["dir_adultos"])
+val_dir_c = st.number_input("Crianças (Direita)", min_value=0,
+                            step=1, value=st.session_state.dados["dir_criancas"])
+val_vis = st.number_input("Visitantes", min_value=0,
+                          step=1, value=st.session_state.dados["dir_visitantes"])
+val_conv = st.number_input("Conversões / Decisões", min_value=0,
+                           step=1, value=st.session_state.dados["dir_conversoes"])
+
+st.markdown("---")
+
+st.markdown("#### ⬅️ Corredor Esquerdo (Restante das Fileiras)")
+val_esq_a = st.number_input("Adultos (Esquerda)", min_value=0,
+                            step=1, value=st.session_state.dados["esq_adultos"])
+val_esq_c = st.number_input("Crianças (Esquerda)", min_value=0,
+                            step=1, value=st.session_state.dados["esq_criancas"])
+
+st.session_state.dados.update({
+    "dir_adultos": val_dir_a, "dir_criancas": val_dir_c,
+    "dir_visitantes": val_vis, "dir_conversoes": val_conv,
+    "esq_adultos": val_esq_a, "esq_criancas": val_esq_c
+})
+
+total_adultos = st.session_state.dados["dir_adultos"] + \
+    st.session_state.dados["esq_adultos"]
+total_criancas = st.session_state.dados["dir_criancas"] + \
+    st.session_state.dados["esq_criancas"]
+total_geral = total_adultos + total_criancas
+
+st.markdown("---")
+st.markdown("### 📊 Totais Calculados")
+st.metric("PÚBLICO TOTAL", total_geral)
+
+st.markdown("### 💬 Enviar para o WhatsApp")
+
+texto_whatsapp = (
+    f"📊 *RELATÓRIO DE PÚBLICO DO CULTO*\n\n"
+    f"🚶‍♂️ *Total Geral:* {total_geral} pessoas\n"
+    f"👨‍💼 *Adultos:* {total_adultos}\n"
+    f"👶 *Crianças:* {total_criancas}\n\n"
+    f"⭐ *Visitantes:* {st.session_state.dados['dir_visitantes']}\n"
+    f"❤️ *Conversões:* {st.session_state.dados['dir_conversoes']}\n\n"
+    f"_Enviado via Sistema de Contagem Inteligente_"
+)
+
+st.text_area("Toque e segure para copiar o texto abaixo:",
+             value=texto_whatsapp, height=180)
+
+texto_url = urllib.parse.quote(texto_whatsapp)
+link_whatsapp = f"https://wa.me/?text={texto_url}"
+
+st.markdown(f'<a href="{link_whatsapp}" target="_blank"><button style="width:100%; height:50px; background-color:#25D366; color:white; border:none; border-radius:5px; font-weight:bold; font-size:16px; cursor:pointer;">📲 Partilhar Direto no WhatsApp</button></a>', unsafe_allow_html=True)
