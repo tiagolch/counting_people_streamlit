@@ -28,8 +28,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)  # <-- CORRIGIDO AQUI
 
-st.title("⛪ Contador do Culto")
-st.write("Introduza os dados recolhidos nos corredores para consolidar o relatório.")
+st.title("⛪ Contador por reunião")
+st.write("Introduza os dados recolhidos para consolidar o relatório.")
 
 if "dados" not in st.session_state:
     st.session_state.dados = {
@@ -37,24 +37,11 @@ if "dados" not in st.session_state:
         "esq_adultos": 0, "esq_criancas": 0
     }
 
-with st.expander("📸 Capturar/Enviar Foto da Plateia (Opcional)", expanded=False):
-    source = st.selectbox("Fonte:", ["Carregar Foto", "Câmera do Telemóvel"])
-    uploaded_image = st.file_uploader(
-        "Selecione a imagem", type=["jpg", "png", "jpeg"])
-
-    if st.button("🤖 Sugerir Contagem via IA"):
-        st.session_state.dados["dir_adultos"] = 35
-        st.session_state.dados["dir_criancas"] = 4
-        st.session_state.dados["esq_adultos"] = 55
-        st.session_state.dados["esq_criancas"] = 8
-        st.success("Sugestão da IA carregada nos campos abaixo!")
-
 st.markdown("### 📝 Dados da Contagem")
 
-st.markdown("#### ➡️ Corredor Direito (Fileiras 1 a 5)")
-val_dir_a = st.number_input("Adultos (Direita)", min_value=0,
+val_dir_a = st.number_input("Adultos", min_value=0,
                             step=1, value=st.session_state.dados["dir_adultos"])
-val_dir_c = st.number_input("Crianças (Direita)", min_value=0,
+val_dir_c = st.number_input("Crianças", min_value=0,
                             step=1, value=st.session_state.dados["dir_criancas"])
 val_vis = st.number_input("Visitantes", min_value=0,
                           step=1, value=st.session_state.dados["dir_visitantes"])
@@ -63,16 +50,9 @@ val_conv = st.number_input("Conversões / Decisões", min_value=0,
 
 st.markdown("---")
 
-st.markdown("#### ⬅️ Corredor Esquerdo (Restante das Fileiras)")
-val_esq_a = st.number_input("Adultos (Esquerda)", min_value=0,
-                            step=1, value=st.session_state.dados["esq_adultos"])
-val_esq_c = st.number_input("Crianças (Esquerda)", min_value=0,
-                            step=1, value=st.session_state.dados["esq_criancas"])
-
 st.session_state.dados.update({
     "dir_adultos": val_dir_a, "dir_criancas": val_dir_c,
     "dir_visitantes": val_vis, "dir_conversoes": val_conv,
-    "esq_adultos": val_esq_a, "esq_criancas": val_esq_c
 })
 
 total_adultos = st.session_state.dados["dir_adultos"] + \
