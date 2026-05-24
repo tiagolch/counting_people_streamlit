@@ -1,5 +1,6 @@
 import streamlit as st
 import urllib.parse
+from datetime import datetime
 
 st.set_page_config(
     page_title="Contador Igreja",
@@ -35,10 +36,18 @@ if "dados" not in st.session_state:
 
 st.markdown("### 📝 Identificação e Horário")
 
-nome_pessoa = st.text_input("Nome do responsável pela contagem:", placeholder="Ex: João Silva D1 ou E1")
+data_hoje = datetime.now()
+
+nome_pessoa = st.text_input("Nome do responsável pela contagem:", placeholder="Ex: João Silva")
+
+posicao = st.radio(
+    "Selecione a posição do responsável:",
+    options=["D1", "E1"],
+    horizontal=True
+)
 
 horario_selecionado = st.radio(
-    "Selecione o horário do culto / reunião:",
+    "Selecione o horário da reunião:",
     options=["09:30", "11:30", "17:30"],
     horizontal=True 
 )
@@ -78,8 +87,10 @@ nome_responsavel = nome_pessoa if nome_pessoa.strip() != "" else "Não informado
 
 texto_whatsapp = (
     f"📊 *RELATÓRIO DE PÚBLICO DA REUNIÃO*\n"
+    f"📅 *Data:* {data_hoje.strftime('%d/%m/%Y')}\n"
     f"🕒 *Horário:* {horario_selecionado}\n"
-    f"👤 *Responsável:* {nome_responsavel}\n\n"
+    f"👤 *Responsável:* {nome_responsavel}\n"
+    f"📍 *Posição:* {posicao}\n"
     f"🚶‍♂️ *Total Geral:* {total_geral} pessoas\n"
     f"👨‍💼 *Adultos:* {total_adultos}\n"
     f"👶 *Crianças:* {total_criancas}\n\n"
