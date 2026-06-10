@@ -89,7 +89,7 @@ texto_whatsapp = (
     f"📊 *RELATÓRIO DE PÚBLICO DA REUNIÃO*\n"
     f"📅 *Data:* {data_hoje.strftime('%d/%m/%Y')}\n"
     f"🕒 *Horário:* {horario_selecionado}\n"
-    f"👤 *Responsável:* {nome_responsavel}\n"
+    f"👤 *Responsável:* {nome_responsavel}\n\n"
     f"📍 *Posição:* {posicao}\n"
     f"🚶‍♂️ *Total Geral:* {total_geral} pessoas\n"
     f"👨‍💼 *Adultos:* {total_adultos}\n"
