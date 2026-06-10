@@ -42,7 +42,7 @@ nome_pessoa = st.text_input("Nome do responsável pela contagem:", placeholder="
 
 posicao = st.radio(
     "Selecione a posição do responsável:",
-    options=["D1", "E1"],
+    options=["D1", "E1", "Produção"],
     horizontal=True
 )
 
