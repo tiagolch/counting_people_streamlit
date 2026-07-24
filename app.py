@@ -9,22 +9,23 @@ st.set_page_config(
     page_title="Hillsong Portugal em Aveiro - Contador",
     page_icon="▽",
     layout="centered",
-)
-
-# --- Função de gravação direta na base de dados (Supabase via URI) ---
-st.set_page_config(
-    page_title="Dashboard - Hillsong Aveiro",
-    page_icon="📊",
-    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
+# --- Função de gravação com Fallback Seguro ---
+
+
 def salvar_no_banco(dados):
     try:
-        # Lê a URI configurada no .streamlit/secrets.toml
+        # Tenta obter a URL dos secrets
+        if "postgres" not in st.secrets or "url" not in st.secrets["postgres"]:
+            st.warning("⚠️ Configuração de banco de dados ausente (Secrets).")
+            return False
+
         db_url = st.secrets["postgres"]["url"]
 
-        conn = psycopg2.connect(db_url)
+        # Define timeout curto na conexão para não travar a tela caso a rede falhe
+        conn = psycopg2.connect(db_url, connect_timeout=3)
         cursor = conn.cursor()
 
         sql_insert = """
@@ -53,7 +54,11 @@ def salvar_no_banco(dados):
         conn.close()
         return True
     except Exception as e:
-        st.error(f"Erro ao guardar na base de dados: {e}")
+        # Se falhar a gravação no banco, avisa o usuário sem interromper o fluxo
+        st.warning(
+            "⚠️ Não foi possível conectar à base de dados. O relatório poderá ser enviado normalmente pelo WhatsApp!"
+        )
+        print(f"Erro ao salvar no banco: {e}")  # Log para debug interno
         return False
 
 
@@ -235,7 +240,7 @@ texto_whatsapp = (
 texto_url = urllib.parse.quote(texto_whatsapp)
 link_whatsapp = f"https://wa.me/?text={texto_url}"
 
-# --- Botão de Gravação + Partilha ---
+# --- Botão com Processamento Seguro ---
 if st.button("📲 Guardar Dados e Partilhar no WhatsApp"):
     dados_registro = {
         "data_hora": data_hoje,
@@ -249,25 +254,29 @@ if st.button("📲 Guardar Dados e Partilhar no WhatsApp"):
         "conversoes": st.session_state.dados["dir_conversoes"],
     }
 
-    if salvar_no_banco(dados_registro):
-        st.success("✅ Relatório registado no banco de dados!")
-        st.markdown(
-            f"""
-            <a href="{link_whatsapp}" target="_blank" style="text-decoration: none;">
-                <button style="
-                    width:100%; 
-                    height:52px; 
-                    background-color:#25D366; 
-                    color:white; 
-                    border:none; 
-                    border-radius:8px; 
-                    font-weight:600; 
-                    font-size:16px; 
-                    cursor:pointer;
-                    margin-top:10px;">
-                    👉 Abrir WhatsApp agora
-                </button>
-            </a>
-            """,
-            unsafe_allow_html=True,
-        )
+    sucesso_banco = salvar_no_banco(dados_registro)
+
+    if sucesso_banco:
+        st.success("✅ Relatório registado na base de dados!")
+
+    # Exibe o botão do WhatsApp independentemente de ter salvado no banco ou falhado
+    st.markdown(
+        f"""
+        <a href="{link_whatsapp}" target="_blank" style="text-decoration: none;">
+            <button style="
+                width:100%; 
+                height:52px; 
+                background-color:#25D366; 
+                color:white; 
+                border:none; 
+                border-radius:8px; 
+                font-weight:600; 
+                font-size:16px; 
+                cursor:pointer;
+                margin-top:10px;">
+                👉 Abrir WhatsApp agora
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True,
+    )

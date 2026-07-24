@@ -2,15 +2,13 @@ import pandas as pd
 import psycopg2
 import streamlit as st
 
-# --- Configuração da Página com Sidebar Fechada por Padrão ---
 st.set_page_config(
     page_title="Dashboard - Hillsong Aveiro",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="collapsed",  # <-- Define a barra lateral iniciada fechada
+    initial_sidebar_state="collapsed",
 )
 
-# --- Estilização CSS alinhada ao tema principal ---
 st.markdown(
     """
     <style>
@@ -59,12 +57,16 @@ st.title("📊 Painel de Métricas & Relatórios")
 st.markdown("---")
 
 
-# --- Leitura dos dados do Supabase ---
+# --- Leitura dos dados com Tratamento de Erros ---
 @st.cache_data(ttl=60)
 def carregar_dados():
     try:
+        if "postgres" not in st.secrets or "url" not in st.secrets["postgres"]:
+            st.error("⚠️ Configuração do banco de dados ausente nos Secrets.")
+            return pd.DataFrame()
+
         db_url = st.secrets["postgres"]["url"]
-        conn = psycopg2.connect(db_url)
+        conn = psycopg2.connect(db_url, connect_timeout=3)
         query = """
             SELECT 
                 id,
@@ -88,17 +90,15 @@ def carregar_dados():
             df["data"] = df["data_hora"].dt.date
         return df
     except Exception as e:
-        st.error(f"Erro ao carregar dados do banco: {e}")
+        st.error(f"⚠️ Erro ao consultar a base de dados: {e}")
         return pd.DataFrame()
 
 
 df_bruto = carregar_dados()
 
 if df_bruto.empty:
-    st.info(
-        "Nenhum registro encontrado na base de dados para gerar o dashboard."
-    )
-    if st.button("🔄 Atualizar"):
+    st.warning("Nenhum registro carregado da base de dados neste momento.")
+    if st.button("🔄 Tentar Novamente"):
         st.cache_data.clear()
         st.rerun()
     st.stop()
@@ -106,7 +106,6 @@ if df_bruto.empty:
 # --- Barra Lateral de Filtros ---
 st.sidebar.header("🔍 Filtros de Consulta")
 
-# Filtro de Data (Obrigatório)
 datas_disponiveis = sorted(df_bruto["data"].unique(), reverse=True)
 data_inicio, data_fim = st.sidebar.date_input(
     "Período:",
@@ -115,7 +114,6 @@ data_inicio, data_fim = st.sidebar.date_input(
     max_value=max(datas_disponiveis),
 )
 
-# Filtro de Horário (Opcional - vazio busca todos)
 horarios = st.sidebar.multiselect(
     "Horários das Reuniões:",
     options=sorted(df_bruto["horario"].dropna().unique()),
@@ -123,7 +121,6 @@ horarios = st.sidebar.multiselect(
     placeholder="Todos os horários",
 )
 
-# Filtro de Responsável (Opcional - vazio busca todos)
 responsaveis = st.sidebar.multiselect(
     "Responsável:",
     options=sorted(df_bruto["responsavel"].dropna().unique()),
@@ -135,7 +132,7 @@ if st.sidebar.button("🔄 Recarregar Dados"):
     st.cache_data.clear()
     st.rerun()
 
-# --- Aplicação Inteligente dos Filtros ---
+# --- Aplicação dos Filtros ---
 mask_data = (df_bruto["data"] >= data_inicio) & (
     df_bruto["data"] <= data_fim
 )
@@ -150,7 +147,7 @@ if df.empty:
     st.warning("Nenhum dado encontrado com os filtros selecionados.")
     st.stop()
 
-# --- Bloco 1: KPIs Principais ---
+# --- KPIs ---
 st.markdown("### 📈 Resumo do Período Selecionado")
 
 m1, m2, m3, m4, m5 = st.columns(5)
@@ -167,7 +164,7 @@ with m5:
 
 st.markdown("---")
 
-# --- Bloco 2: Gráficos de Análise ---
+# --- Gráficos ---
 st.markdown("### 📊 Análise Gráfica")
 
 c1, c2 = st.columns(2)
@@ -189,14 +186,13 @@ with c2:
     ).set_index("Categoria")
     st.bar_chart(prop_data, color="#FFFFFF")
 
-# --- Bloco 3: Evolução Temporal ---
 st.subheader("Evolução do Público Atendido por Data")
 df_tempo = df.groupby("data")["total_geral"].sum().reset_index().set_index("data")
 st.line_chart(df_tempo, color="#FFD700")
 
 st.markdown("---")
 
-# --- Bloco 4: Tabela Detalhada ---
+# --- Tabela ---
 st.markdown("### 📋 Registros Consolidados")
 st.dataframe(
     df[
